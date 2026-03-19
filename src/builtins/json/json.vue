@@ -2,30 +2,40 @@
 import JSONEditor from 'jsoneditor';
 import 'jsoneditor/dist/jsoneditor.min.css';
 import Ace from 'ace-builds';
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 const { promiseSrc } = defineProps(["promiseSrc"]);
 const emit = defineEmits(['save']);
 
 let model = ref("")
 const editor = ref();
+
+const editorMode = computed({
+  get: () => editor.value ? editor.value.getMode() : "code",
+  set: (val) => editor.value?.setMode(val)
+});
+
 watch(model, (val) => {
   emit('save', val);
-  update();
+  update(false);
 });
 
 const done = ref(false);
 const jref = ref();
 
-function update() {
+function update(doSetMode) {
   if (!editor.value) return;
+  console.log("Mode", editorMode);
   try {
     const jValue = JSON.parse(model.value);
     editor.value.update(jValue);
-    editor.value.setMode("tree");
+    if (doSetMode || init.value) {
+      editorMode.value = "tree";
+      init.value = false;
+    }
   } catch (e) {
     if (e instanceof SyntaxError) {
-      editor.value.setMode("code");
+      editorMode.value = "code";
       editor.value.updateText(model.value);
     } else {
       console.error(e);
@@ -33,8 +43,11 @@ function update() {
   }
 }
 
+const init = ref(false);
+
 async function load() {
   model.value = await promiseSrc;
+  init.value = true;
   done.value = true;
 }
 load();
@@ -46,10 +59,11 @@ onMounted(() => {
     onChange() {
       model.value = editor.value.getText();
     },
-    language: 'zh-CN'
+    language: 'zh-CN',
+    modes: ['tree', 'code']
   };
   editor.value = new JSONEditor(container, options);
-  update();
+  update(true);
 });
 </script>
 

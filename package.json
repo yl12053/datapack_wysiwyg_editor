@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "@lljj/vue3-form-element": "^1.19.0",
     "ace-builds": "^1.43.6",
     "element-plus": "^2.13.5",
     "glob": "^13.0.6",

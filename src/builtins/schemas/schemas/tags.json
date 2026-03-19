@@ -1,0 +1,33 @@
+{
+  "type": "schema",
+  "identifier": "builtins.tags",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "replace": {
+        "ui:title": "替换已有配置",
+        "type": "boolean",
+        "description": "是否替换已有配置",
+        "default": false
+      },
+      "values": {
+        "ui:title": "Tag列表",
+        "type": "array",
+        "description": "符合这个Tag的ResourceLocation列表",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+:[a-z0-9\\/]+$",
+          "err:pattern": "不是合法ResourceLocaction",
+          "err:required": "不能留空"
+        }
+      }
+    },
+    "required": [
+      "values"
+    ],
+    "additionalProperties": false
+  },
+  "match": "^data\\/[a-z\\d\\-_]+\\/tags\\/[a-z\\d\\/\\-_]+\\.json$",
+  "priority": 0
+}

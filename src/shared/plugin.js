@@ -5,6 +5,8 @@ import { loadModule } from 'vue3-sfc-loader'
 
 import Text from '../builtins/text/text.vue';
 import Json from '../builtins/json/json.vue';
+import Schema from '../builtins/schema/schema.vue'
+import registerSchema from '../builtins/schemas/register.js'
 
 const loaded = ref([]);
 const calculatedLoaded = computed(() =>
@@ -47,9 +49,7 @@ class Plugin {
     this.$componentName = `c${shared++}`;
     this.$pathMatch = new RegExp(json.match);
     this.$descname = descname;
-    console.log(json);
     this.$json = ref(json);
-    console.log(this.$json);
     this.$componentFile = componentFile;
     this.defineComponent();
   }
@@ -73,6 +73,7 @@ class Plugin {
       return JSON.parse(window.localStorage.getItem("plugin_priority"))[this.$json.value.identifier] ?? (this.$json.value.priority ?? 0);
     } catch (e) {
       console.error(e);
+      console.log(this.$json.value);
       return this.$json.value.priority ?? 0;
     }
   }
@@ -87,6 +88,25 @@ class InternalPlugin extends Plugin {
     console.log("Defining");
     console.log("Component:", this.$componentFile);
     global.app.component(this.$componentName, this.$componentFile);
+  }
+}
+
+let schemaName = undefined;
+class SchemaPlugin extends Plugin {
+  defineComponent() {
+    if (schemaName) {
+      this.$componentName = schemaName;
+    }
+    global.app.component(this.$componentName, this.$componentFile);
+    schemaName = this.$componentName;
+  }
+
+  get schema() {
+    return this.$json.schema;
+  }
+
+  get uischema() {
+    return this.$json.uischema ?? {};
   }
 }
 
@@ -105,13 +125,23 @@ export async function registerInternalPlugins() {
       match: "^.*\.[jJ][sS][oO][nN]$",
       priority: -1
   }, Json, "builtins.json"), enabled: true});
+  await registerSchema(internalPlugins, SchemaPlugin);
 }
 
 export async function clearAndLoad(fs) {
   const newValue = [];
   const readDirValue = await fs.readdir(".");
-  (await Promise.allSettled(readDirValue.map(async (dirname) => {
+  const spanUp = [];
+  for (const baseDir of readDirValue) {
+    (await fs.readdir(baseDir)).map((i) => `${baseDir}/${i}`).map((i) => spanUp.push(i));
+  }
+  console.log(spanUp);
+  (await Promise.allSettled(spanUp.map(async (dirname) => {
     const descJson = JSON.parse(await fs.read(`${dirname}/desc.json`));
+    switch (descJson.type) {
+      case "schema":
+        return new SchemaPlugin(descJson, Schema, dirname);
+    }
     const vueBlob = await fs.getRawBlob(`${dirname}/component.vue`);
     return new Plugin(descJson, vueBlob, dirname);
   }))).forEach(v => {
@@ -122,7 +152,7 @@ export async function clearAndLoad(fs) {
       console.error("Error loading:", reason);
     }
   });
-  newValue.sort.map((v) => ({plugin: v, enabled: true}));
+  newValue.sort().map((v) => ({plugin: v, enabled: true}));
   loaded.value = newValue;
   matchCache.value = {};
 }
@@ -137,8 +167,8 @@ export function findMatchPlugin(path) {
     console.log(plugin.$pathMatch);
     if (plugin.isMatch(path)) {
       console.log("Match ", plugin);
-      matchCache.value[path] = plugin.componentName;
-      return plugin.componentName;
+      matchCache.value[path] = plugin;
+      return plugin;
     }
   }
   matchCache.value[path] = false;

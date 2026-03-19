@@ -518,7 +518,8 @@ onUnmounted(() => {
         </template>
         <template #default>
           <component
-            :is="findMatchPlugin(lastSelect.substring(10))"
+            :is="findMatchPlugin(lastSelect.substring(10)).componentName"
+            :plugin="findMatchPlugin(lastSelect.substring(10))"
             :promiseSrc="readWithCache(lastSelect.substring(10))"
             @save="(val) => writeToCache(val, lastSelect.substring(10))"
             :key="lastSelect"
