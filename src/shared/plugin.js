@@ -4,10 +4,11 @@ import global from './global.js'
 import { loadModule } from 'vue3-sfc-loader'
 
 import Text from '../builtins/text/text.vue';
+import Json from '../builtins/json/json.vue';
 
 const loaded = ref([]);
 const calculatedLoaded = computed(() =>
-  loaded.value.concat(internalPlugins).toSorted((a, b) => a.priority - b.proprity)
+  loaded.value.concat(internalPlugins).toSorted((a, b) => b.plugin.priority - a.plugin.priority)
 );
 
 const options = {
@@ -46,7 +47,9 @@ class Plugin {
     this.$componentName = `c${shared++}`;
     this.$pathMatch = new RegExp(json.match);
     this.$descname = descname;
+    console.log(json);
     this.$json = ref(json);
+    console.log(this.$json);
     this.$componentFile = componentFile;
     this.defineComponent();
   }
@@ -66,7 +69,12 @@ class Plugin {
   }
 
   get priority() {
-    return JSON.parse(window.localStorage.getItem("plugin_priority"))[this.$json.value.identifier] ?? (this.$json.value.priority ?? 0);
+    try {
+      return JSON.parse(window.localStorage.getItem("plugin_priority"))[this.$json.value.identifier] ?? (this.$json.value.priority ?? 0);
+    } catch (e) {
+      console.error(e);
+      return this.$json.value.priority ?? 0;
+    }
   }
 
   isMatch(path) {
@@ -88,10 +96,15 @@ const internalPlugins = [];
 export async function registerInternalPlugins() {
   console.log("Registering");
   internalPlugins.push({plugin: new InternalPlugin({
-    id: "builtins.text",
+    identifier: "builtins.text",
     match: ".*",
     priority: -10
   }, Text, "builtins.text"), enabled: true});
+  internalPlugins.push({plugin: new InternalPlugin({
+      identifier: "builtins.json",
+      match: "^.*\.[jJ][sS][oO][nN]$",
+      priority: -1
+  }, Json, "builtins.json"), enabled: true});
 }
 
 export async function clearAndLoad(fs) {

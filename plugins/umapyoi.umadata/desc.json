@@ -1,5 +1,5 @@
 {
-  "id": "umapyoi.umadata",
+  "identifier": "umapyoi.umadata",
   "match": "data\\/[^\\/]+\\/umapyoi\\/umadata\\/[^\\/]+\\.json",
   "priority": 1
 }

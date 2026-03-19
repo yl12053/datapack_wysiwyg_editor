@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "ace-builds": "^1.43.6",
     "element-plus": "^2.13.5",
     "glob": "^13.0.6",
+    "jsoneditor": "^10.4.2",
     "path-browserify": "^1.0.1",
     "smol-toml": "^1.6.0",
     "vite-plugin-top-level-await": "^1.6.0",
