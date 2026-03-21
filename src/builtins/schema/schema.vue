@@ -12,14 +12,16 @@ const uischema = ref(plugin.uischema);
 const schema = ref(plugin.schema);
 
 watch(model, (val) => {
+  if (!done.value) return;
   emit('save', JSON.stringify(val));
-});
+}, {deep: true});
 
 const done = ref(false);
 
 async function load() {
   try {
     model.value = JSON.parse(await promiseSrc);
+    console.log("model", model);
   } catch (e) {
     console.error(e);
   }
@@ -35,7 +37,10 @@ load();
     :ui-schema="uischema"
     :schema="schema"
     style="text-align: start; width: 60%; margin-left: 20%; margin-top: 8vh;"
+    v-if="done"
+    @submit.prevent
   >
+    <template></template>
   </vue-form>
 </template>
 

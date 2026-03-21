@@ -17,7 +17,7 @@
         "description": "符合这个Tag的ResourceLocation列表",
         "items": {
           "type": "string",
-          "pattern": "^[a-z0-9]+:[a-z0-9\\/]+$",
+          "pattern": "^[a-z0-9_\\-]+:[a-z0-9_\\-\\/]+$",
           "err:pattern": "不是合法ResourceLocaction",
           "err:required": "不能留空"
         }

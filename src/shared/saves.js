@@ -40,17 +40,45 @@ export async function save() {
   if (isSaving) return;
   isSaving = true;
   try {
+    let success = true;
     if (validateMeta()) {
       const meta = global.open.value.serialized;
       const writePath = `META-INF/${global.open.value.isNew ? 'neoforge.' : ''}mods.toml`;
-      await global.open.value.filesystem.write(writePath, meta);
+      try {
+        await global.open.value.filesystem.write(writePath, meta);
+      } catch (e) {
+        ElNotification({
+          title: "保存基本资料时错误",
+          message: e,
+          type: "error"
+        });
+        success = false;
+      }
     } else {
       ElNotification({
         title: "基本资料校验未通过",
         message: "请在左侧菜单选取基础信息 > 模组信息和前置检查是否有错误项",
         type: "error"
       });
+      success = false;
     }
+    await Promise.allSettled(Object.entries(global.temp).map(async ([path, value]) => {
+      try {
+        await global.open.value.filesystem.write(path, value);
+      } catch (e) {
+        ElNotification({
+          title: `保存${path}时错误`,
+          message: e,
+          type: 'error'
+        });
+        success = false;
+      }
+    }));
+    if (success) ElNotification({
+      title: "保存成功",
+      message: "全部文件保存成功",
+      type: "success"
+    });
   } catch (e) {
     ElNotification({
       title: "未知错误",

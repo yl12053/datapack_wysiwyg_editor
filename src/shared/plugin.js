@@ -10,7 +10,11 @@ import registerSchema from '../builtins/schemas/register.js'
 
 const loaded = ref([]);
 const calculatedLoaded = computed(() =>
-  loaded.value.concat(internalPlugins).toSorted((a, b) => b.plugin.priority - a.plugin.priority)
+  loaded.value.concat(internalPlugins).toSorted((a, b) => {
+    console.log("B", b);
+    console.log("A", a);
+    return b.plugin.priority - a.plugin.priority;
+  })
 );
 
 const options = {
@@ -152,14 +156,14 @@ export async function clearAndLoad(fs) {
       console.error("Error loading:", reason);
     }
   });
-  newValue.sort().map((v) => ({plugin: v, enabled: true}));
-  loaded.value = newValue;
+  loaded.value = newValue.sort().map((v) => ({plugin: v, enabled: true}));
   matchCache.value = {};
 }
 
 export function findMatchPlugin(path) {
   if (matchCache.value[path] !== undefined) return matchCache.value[path] ? matchCache.value[path] : undefined;
   console.log(path);
+  console.log(calculatedLoaded);
   console.log(calculatedLoaded.value);
   for (let pluginDesc of calculatedLoaded.value) {
     if (!pluginDesc.enabled) continue;
